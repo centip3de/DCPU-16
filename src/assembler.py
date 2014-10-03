@@ -50,9 +50,9 @@ class Parser():
                 foo = compiled[i]
                 if foo[j] in self.LABELS:
                     compiled[i][j] = hex(self.LABELS[foo[j]])
-                pretty.append(compiled[i][j])
+            pretty.append(" ".join(compiled[i]))
 
-        return pretty 
+        return "\n".join(pretty)
 
     def handle(self, word):
 
@@ -211,7 +211,7 @@ def main():
 
     text = fi.read()
     p = Parser(text)
-    fo.write(" ".join(p.assemble()))
+    fo.write(p.assemble())
 
     fi.close()
     fo.close()
