@@ -41,6 +41,11 @@ BASIC_OPCODES = {
     "IFG" : 0x0E, 
     "IFB" : 0x0F }
 
+# Basically only has JSR
 NON_BASIC_OPCODES = {
     "JSR" : 0x01 }
 
+# Reverse lookups
+REV_VALUES = {value : key for (key, value) in VALUES.items()}
+REV_BASIC = {value : key for (key, value) in BASIC_OPCODES.items()}
+REV_NON_BASIC = {value : key for (key, value) in NON_BASIC_OPCODES.items()}
