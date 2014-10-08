@@ -86,12 +86,124 @@ class CPU():
 
         if self.is_reg(dest):
             if dest == 0x1C:
-                self.PC = src
+                pass
+                #self.PC = src
             else:
                 self.regs[dest] = src
 
         else:
             self.mem[dest] = src
+
+        self.cycle(1)
+
+    def SUB(self, dest, src):
+
+        """
+        Sets dest to dest - src
+        Args:
+                dest - The destination to set.
+                src  - The thing to subtract from the destination.
+        Returns:
+                None
+        """
+
+        # FIXME: Underflows are not detected. 
+
+        if self.is_reg(dest):
+            if dest == 0x1C:
+                self.PC -= src
+
+            else:
+                self.regs[dest] -= src
+        else:
+            self.mem[dest] -= src
+
+    def ADD(self, dest, src):
+
+        """
+        Sets dest to dest + src
+        Args:
+                dest - The destination to set.
+                src  - The thing to add to the destination.
+        Returns:
+                None
+        """
+
+        # FIXME: Overflows are not detected.
+
+        if self.is_reg(dest):
+            if dest == 0x1C:
+                self.PC += src
+
+            else:
+                self.regs[dest] += src
+
+        else:
+            self.mem[dest] += src
+
+        self.cycle(1)
+
+    def MUL(self, dest, src):
+        
+        """
+        Sets dest to dest * src, and O to ((dest*src)>>16)&0xFFFF.
+        Args:
+                dest - The destination.
+                src  - The thing to multiply the destination to.
+        Returns:
+                None
+        """
+
+        if self.is_reg(dest):
+            if dest == 0x1C:
+                self.PC *= src
+
+            else:
+                self.regs[dest] *= src
+
+        else:
+            self.mem[dest] *= src
+
+        # Magic
+        self.O = ((dest*src)>>16)&0xFFFF
+
+        self.cycle(1)
+
+    def DIV(self, dest, src):
+
+        """
+        Sets dest to dest/src, and O to ((dest/src)<<16)&0xFFFF if src != 0. If src == 0, then O = 0, and dest = 0.
+        Args:
+                dest - The destination 
+                src  - The thing to divide the destination by.
+        Returns:
+                None
+        """
+
+        if self.is_reg(dest):
+            if dest == 0x1C:
+                if src == 0:
+                    self.PC = 0
+                else:
+                    self.PC /= src
+
+            else:
+                if src == 0:
+                    self.regs[dest] = 0 
+                else:
+                    self.regs[dest] /= src
+
+        else:
+            if src == 0:
+                self.mem[dest] = 0
+            else:
+                self.mem[dest] /= src
+
+        if src == 0:
+            self.O = 0
+        else:
+            # Magic
+            self.O = ((dest<<16)/src)&0xFFFF
 
         self.cycle(1)
 
@@ -109,28 +221,57 @@ class CPU():
         op = word[0]
         dest = word[1]
         src  = word[2]
-
         
+        # Handle basic opcodes
         if op in REV_BASIC:
 
+            # Handle literal bitpacking in the source
             if src >= 0x20 and src <= 0x3f:
                 src -= 32
 
+            # Handle literal bitpacking in the destination
             if dest >= 0x20 and dest <= 0x3f:
                 dest -= 32
 
-            if dest == 0x1e:
+            # Handle accessing register memory 
+            if src in REV_VALUES and (src >= 0x08 and src <=0x0F):
+                src = self.regs[src - 0x08] 
+
+            # Handle accesssing register memory
+            if dest in REV_VALUES and (dest >= 0x08 and dest <=0x0F):
+                dest = self.regs[dest - 0x08]
+
+            # Handle literals in the destination
+            if dest == 0x1f:
                 dest = self.get_next()
 
+            # Handle accessing memory
+            if dest == 0x1e:
+                dest = self.mem[self.get_next()]
+
+            # Handle literals in the source
             if src == 0x1f:
                 src = self.get_next()
 
+            # Handle accessing memory
             if src == 0x1e:
-                src = self.get_next()
+                src = self.mem[self.get_next()]
 
-            
+            # Handle opcodes
             if REV_BASIC[op] == "SET":
                 self.SET(dest, src)
+
+            elif REV_BASIC[op] == "ADD":
+                self.ADD(dest, src)
+
+            elif REV_BASIC[op] == "SUB":
+                self.SUB(dest, src)
+
+            elif REV_BASIC[op] == "MUL":
+                self.MUL(dest, src)
+
+            elif REV_BASIC[op] == "DIV":
+                self.DIV(dest, src)
 
     def load(self, program):
 
