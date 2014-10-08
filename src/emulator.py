@@ -298,6 +298,7 @@ class CPU():
 
         mem = self.mem[self.PC]
         self.PC += 1
+        self.cycle(1)
         return mem
 
     def is_reg(self, reg):
