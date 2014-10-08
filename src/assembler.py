@@ -52,7 +52,7 @@ class Parser():
                     compiled[i][j] = hex(self.LABELS[foo[j]])
             pretty.append(" ".join(compiled[i]))
 
-        return "\n".join(pretty)
+        return " ".join(pretty)
 
     def handle(self, word):
 
