@@ -97,6 +97,70 @@ class CPU():
 
         self.cycle(1)
 
+    def XOR(self, dest, src):
+        
+        """
+        Sets the given destination to destination^src
+        Args:
+                dest - The destination to set
+                src  - The thing to xor the desintation by
+        Returns:
+                None
+        """
+
+        if self.is_reg(dest):
+            if dest == 0x1C:
+                self.PC ^= src
+            else:
+                self.regs[dest] ^= src
+        else:
+            self.mem[dest] ^= src
+
+        self.cycle(1)
+
+    def BOR(self, dest, src):
+        
+        """
+        Sets the given destination to destination|src.
+        Args:
+                dest - The destination to set
+                src  - The thing to or the destination by
+        Returns:
+                None
+        """
+
+        if self.is_reg(dest):
+            if dest == 0x1C:
+                self.PC |= src
+            else:
+                self.regs[dest] |= src
+
+        else:
+            self.mem[dest] |= src
+
+        self.cycle(1)
+
+    def AND(self, dest, src):
+
+        """
+        Sets the given destination to destination^src.
+        Args:
+                dest - The destination to set
+                src  - The thing to and the destination by
+        Returns:
+                None
+        """
+
+        if self.is_reg(dest):
+            if dest == 0x1C:
+                self.PC &= src
+            else:
+                self.regs[dest] &= src
+        else:
+            self.mem[dest] &= src
+
+        self.cycle(1)
+
     def SHR(self, dest, src):
 
         """
@@ -367,6 +431,15 @@ class CPU():
 
             elif REV_BASIC[op] == "SHR":
                 self.SHR(dest, src)
+
+            elif REV_BASIC[op] == "BOR":
+                self.BOR(dest, src)
+
+            elif REV_BASIC[op] == "XOR":
+                self.XOR(dest, src)
+
+            elif REV_BASIC[op] == "AND":
+                self.AND(dest, src)
 
     def load(self, program):
 
