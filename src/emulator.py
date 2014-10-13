@@ -43,6 +43,7 @@ class CPU():
             print(REV_VALUES[i] + ": " + str(hex(self.regs[i])))
 
         print("PC: " + str(hex(self.PC)))
+        print("O: " + str(hex(self.O)))
 
     def cycle(self, amount):
         
@@ -96,6 +97,89 @@ class CPU():
 
         self.cycle(1)
 
+    def SHR(self, dest, src):
+
+        """
+        Sets the given destination to destination >> src, and O to ((dest<<16)>>src)&0xFFFF
+        Args:
+                dest - The destination to set
+                src  - The thing to shift the desination by
+        Returns:
+                None
+        """
+        
+        if self.is_reg(dest):
+            if dest == 0x1C:
+                self.PC = self.PC >> src
+
+            else:
+                self.regs[dest] = self.regs[dest] >> src
+
+        else:
+            self.mem[dest] = self.mem[dest] >> src
+
+        self.O = ((dest<<16)>>src)&0xFFFF
+
+        self.cycle(2)
+
+    def SHL(self, dest, src):
+
+        """
+        Sets the given destination to destination << src, and O to ((dest<>16)&0xFFFF)
+        Args:
+                dest - The destination to set
+                src  - The thing to shift the destination by
+        Returns:
+                None
+        """
+
+
+        if self.is_reg(dest):
+            if dest == 0x1C:
+                self.PC = self.PC << src
+            else:
+                self.regs[dest] = self.regs[dest] << src
+
+        else:
+            self.mem[dest] = self.mem[dest] << src
+
+        # What the hell is the '<>' operator?!
+        #self.O = ((dest<>16)&0xFFFF)
+
+        self.cycle(2)
+
+    def MOD(self, dest, src):
+
+        """
+        Sets the given destination to destination%src. If src == 0, sets the destination to 0. 
+        Args:
+                dest - The destination to set
+                src  - The thing to mod the destination to.
+        Returns:
+                None
+        """
+
+        if self.is_reg(dest):
+            if dest == 0x1C:
+                if src == 0:
+                    self.PC = 0
+                else:
+                    self.PC %= src
+
+            else:
+                if src == 0:
+                    self.regs[dest] = 0
+                else:
+                    self.regs[dest] %= src
+
+        else:
+            if src == 0:
+                self.mem[dest] = 0
+            else:
+                self.mem[dest] %= src
+
+        self.cycle(3)
+
     def SUB(self, dest, src):
 
         """
@@ -117,6 +201,8 @@ class CPU():
                 self.regs[dest] -= src
         else:
             self.mem[dest] -= src
+
+        self.cycle(2)
 
     def ADD(self, dest, src):
 
@@ -141,7 +227,7 @@ class CPU():
         else:
             self.mem[dest] += src
 
-        self.cycle(1)
+        self.cycle(2)
 
     def MUL(self, dest, src):
         
@@ -167,7 +253,7 @@ class CPU():
         # Magic
         self.O = ((dest*src)>>16)&0xFFFF
 
-        self.cycle(1)
+        self.cycle(2)
 
     def DIV(self, dest, src):
 
@@ -205,7 +291,7 @@ class CPU():
             # Magic
             self.O = ((dest<<16)/src)&0xFFFF
 
-        self.cycle(1)
+        self.cycle(3)
 
     def step(self):
 
@@ -272,6 +358,15 @@ class CPU():
 
             elif REV_BASIC[op] == "DIV":
                 self.DIV(dest, src)
+
+            elif REV_BASIC[op] == "MOD":
+                self.MOD(dest, src)
+
+            elif REV_BASIC[op] == "SHL":
+                self.SHL(dest, src)
+
+            elif REV_BASIC[op] == "SHR":
+                self.SHR(dest, src)
 
     def load(self, program):
 
