@@ -1,6 +1,14 @@
 import sys
 from opcodes import *
 
+"""
+Todo:
+    - Write in JSR
+    - Decrapify the code, i.e., let's not have 100 functions that do the same thing except 1 action. 
+    - Handle overflows/underflows
+    - Possibly get registers to work when called in the src
+"""
+
 class CPU():
 
     def __init__(self, text):
@@ -9,7 +17,7 @@ class CPU():
         self.regs = [0] * 8
         self.PC = 0
         self.O = 0
-        self.SP = 0
+        self.SP = 0xFFFF
 
     def run(self):
 
@@ -513,7 +521,7 @@ class CPU():
         op = word[0]
         dest = word[1]
         src  = word[2]
-        
+
         # Handle basic opcodes
         if op in REV_BASIC:
 
@@ -523,7 +531,7 @@ class CPU():
 
             # Handle literal bitpacking in the destination
             if dest >= 0x20 and dest <= 0x3f:
-                dest -= 32
+               dest -= 32
 
             # Handle accessing register memory 
             if src in REV_VALUES and (src >= 0x08 and src <=0x0F):
@@ -548,6 +556,20 @@ class CPU():
             # Handle accessing memory
             if src == 0x1e:
                 src = self.mem[self.get_next()]
+
+            # Handle poping 
+            if src == 0x18:
+                src = self.mem[self.SP]
+                self.SP += 1
+
+            # Handle peeking
+            if src == 0x19:
+                src = self.mem[self.SP]
+
+            # Handle pushing 
+            if dest == 0x1A:
+                self.SP -= 1
+                dest = self.SP
 
             # Handle opcodes
             if REV_BASIC[op] == "SET":
