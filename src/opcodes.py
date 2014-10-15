@@ -18,7 +18,7 @@ VALUES = {
     "[J]" : 0x0F, 
     "POP" : 0x18, 
     "PEEK" : 0x19, 
-    "PUSH" : 0x20, 
+    "PUSH" : 0x1A, 
     "SP" : 0x1B, 
     "PC" : 0x1C, 
     "O" : 0x1D }
