@@ -97,6 +97,149 @@ class CPU():
 
         self.cycle(1)
 
+    def IFB(self, dest, src):
+
+        """
+        Executes the next instruction if (dest & src) != 0
+        Args:
+                dest - The destination to test against
+                src  - The src to test against
+        Returns:
+                None
+        """
+
+        if self.is_reg(dest):
+            if dest == 0x1C:
+                if (self.PC & src) != 0:
+                    pass
+                else:
+                    self.get_next()
+                    self.step()
+
+            else:
+                if (self.regs[dest] & src) != 0:
+                    pass
+                else:
+                    self.get_next()
+                    self.step()
+
+        else:
+            if (self.mem[dest] & src):
+                pass
+            else:
+                self.get_next()
+                self.step()
+
+        self.cycle(2)
+
+
+    def IFG(self, dest, src):
+
+        """
+        Executes the next instruction if dest > src
+        Args:
+                dest - The destination to test against
+                src  - The src to test against
+        Returns:
+                None
+        """
+
+        if self.is_reg(dest):
+            if dest == 0x1C:
+                if self.PC > src:
+                    pass
+                else:
+                    self.get_next()
+                    self.step()
+
+            else:
+                if self.regs[dest] > src:
+                    pass
+                else:
+                    self.get_next()
+                    self.step()
+
+        else:
+            if self.mem[dest] > src:
+                pass
+            else:
+                self.get_next()
+                self.step()
+
+        self.cycle(2)
+
+
+    def IFN(self, dest, src):
+
+        """
+        Executes the next instruction if dest != src
+        Args:
+                dest - The destination to test against
+                src  - The src to test against
+        Returns:
+                None
+        """
+
+        if self.is_reg(dest):
+            if dest == 0x1C:
+                if self.PC != src:
+                    pass
+                else:
+                    self.get_next()
+                    self.step()
+
+            else:
+                if self.regs[dest] != src:
+                    pass
+                else:
+                    self.get_next()
+                    self.step()
+
+        else:
+            if self.mem[dest] != src:
+                pass
+            else:
+                self.get_next()
+                self.step()
+
+        self.cycle(2)
+
+
+    def IFE(self, dest, src):
+
+        """
+        Executes the next instruction if dest == src
+        Args:
+                dest - The destination to test against
+                src  - The src to test against
+        Returns:
+                None
+        """
+
+        if self.is_reg(dest):
+            if dest == 0x1C:
+                if self.PC == src:
+                    pass
+                else:
+                    self.get_next()
+                    self.step()
+
+            else:
+                if self.regs[dest] == src:
+                    pass
+                else:
+                    self.get_next()
+                    self.step()
+
+        else:
+            if self.mem[dest] == src:
+                pass
+            else:
+                self.get_next()
+                self.step()
+
+        self.cycle(2)
+
     def XOR(self, dest, src):
         
         """
@@ -207,8 +350,7 @@ class CPU():
         else:
             self.mem[dest] = self.mem[dest] << src
 
-        # What the hell is the '<>' operator?!
-        #self.O = ((dest<>16)&0xFFFF)
+        self.O = ((dest<<src)>>16)&0xFFFF
 
         self.cycle(2)
 
@@ -440,6 +582,18 @@ class CPU():
 
             elif REV_BASIC[op] == "AND":
                 self.AND(dest, src)
+
+            elif REV_BASIC[op] == "IFE":
+                self.IFE(dest, src)
+
+            elif REV_BASIC[op] == "IFN":
+                self.IFN(dest, src)
+
+            elif REV_BASIC[op] == "IFG":
+                self.IFG(dest, src)
+
+            elif REV_BASIC[op] == "IFB":
+                self.IFB(dest, src)
 
     def load(self, program):
 
