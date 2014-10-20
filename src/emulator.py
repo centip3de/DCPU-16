@@ -100,7 +100,6 @@ class CPU():
                 self.regs[dest] = src
 
         else:
-            print("SETTING AT: ", hex(dest), " TO: ", hex(src))
             self.mem[dest] = src
 
         self.cycle(1)
@@ -522,9 +521,6 @@ class CPU():
             if dest >= 0x20 and dest <= 0x3f:
                dest -= 32
 
-            print("SRC: ", hex(src))
-            print("DEST: ", hex(dest))
-
         else:
 
             if src >= 0x10 and src <= 0x17:
@@ -565,13 +561,11 @@ class CPU():
 
             # Handle literals in the source
             if src == 0x1f:
-                foo = self.get_next()
-                print("FOO: ", hex(foo))
-                src = foo 
+                src = self.get_next()
 
             # Handle accessing memory
             if src == 0x1e:
-                src = self.mem[self.get_next()]
+                src = self.get_next()
 
         # Handle a failed conditional
         if self.skip:
