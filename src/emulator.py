@@ -3,7 +3,6 @@ from opcodes import *
 
 """
 Todo:
-    - Write in JSR
     - Decrapify the code, i.e., let's not have 100 functions that do the same thing except 1 action. 
     - Handle overflows/underflows
     - Possibly get registers to work when called in the src
@@ -13,6 +12,7 @@ class CPU():
 
     def __init__(self, text):
         self.text = text.split()
+        self.skip = False
         self.mem = [0]*0x10000
         self.regs = [0] * 8
         self.PC = 0
@@ -95,15 +95,20 @@ class CPU():
 
         if self.is_reg(dest):
             if dest == 0x1C:
-                pass
-                #self.PC = src
+                self.PC = src
             else:
                 self.regs[dest] = src
 
         else:
+            print("SETTING AT: ", hex(dest), " TO: ", hex(src))
             self.mem[dest] = src
 
         self.cycle(1)
+
+    def JSR(self, dest):
+        self.SP -= 1
+        self.mem[self.SP] = self.PC
+        self.PC = dest
 
     def IFB(self, dest, src):
 
@@ -121,22 +126,17 @@ class CPU():
                 if (self.PC & src) != 0:
                     pass
                 else:
-                    self.get_next()
-                    self.step()
-
+                    self.skip = True
             else:
                 if (self.regs[dest] & src) != 0:
                     pass
                 else:
-                    self.get_next()
-                    self.step()
-
+                    self.skip = True
         else:
             if (self.mem[dest] & src):
                 pass
             else:
-                self.get_next()
-                self.step()
+                self.skip = True
 
         self.cycle(2)
 
@@ -157,22 +157,19 @@ class CPU():
                 if self.PC > src:
                     pass
                 else:
-                    self.get_next()
-                    self.step()
+                    self.skip = True
 
             else:
                 if self.regs[dest] > src:
                     pass
                 else:
-                    self.get_next()
-                    self.step()
+                    self.skip = True
 
         else:
             if self.mem[dest] > src:
                 pass
             else:
-                self.get_next()
-                self.step()
+                self.skip = True
 
         self.cycle(2)
 
@@ -193,22 +190,19 @@ class CPU():
                 if self.PC != src:
                     pass
                 else:
-                    self.get_next()
-                    self.step()
+                    self.skip = True
 
             else:
                 if self.regs[dest] != src:
                     pass
                 else:
-                    self.get_next()
-                    self.step()
+                    self.skip = True
 
         else:
             if self.mem[dest] != src:
                 pass
             else:
-                self.get_next()
-                self.step()
+                self.skip = True
 
         self.cycle(2)
 
@@ -229,22 +223,19 @@ class CPU():
                 if self.PC == src:
                     pass
                 else:
-                    self.get_next()
-                    self.step()
+                    self.skip = True
 
             else:
                 if self.regs[dest] == src:
                     pass
                 else:
-                    self.get_next()
-                    self.step()
+                    self.skip = True
 
         else:
             if self.mem[dest] == src:
                 pass
             else:
-                self.get_next()
-                self.step()
+                self.skip = True
 
         self.cycle(2)
 
@@ -522,16 +513,25 @@ class CPU():
         dest = word[1]
         src  = word[2]
 
-        # Handle basic opcodes
-        if op in REV_BASIC:
-
-            # Handle literal bitpacking in the source
+        # Handle literal bitpacking in the source
+        if (src >= 0x20 and src <= 0x3f) or (dest >= 0x20 and dest <= 0x3f):
             if src >= 0x20 and src <= 0x3f:
                 src -= 32
 
             # Handle literal bitpacking in the destination
             if dest >= 0x20 and dest <= 0x3f:
                dest -= 32
+
+            print("SRC: ", hex(src))
+            print("DEST: ", hex(dest))
+
+        else:
+
+            if src >= 0x10 and src <= 0x17:
+                src = self.regs[src - 0x10] + self.get_next()
+
+            if dest >= 0x10 and dest <= 0x17:
+                dest = self.regs[dest - 0x10] + self.get_next()
 
             # Handle accessing register memory 
             if src in REV_VALUES and (src >= 0x08 and src <=0x0F):
@@ -540,22 +540,6 @@ class CPU():
             # Handle accesssing register memory
             if dest in REV_VALUES and (dest >= 0x08 and dest <=0x0F):
                 dest = self.regs[dest - 0x08]
-
-            # Handle literals in the destination
-            if dest == 0x1f:
-                dest = self.get_next()
-
-            # Handle accessing memory
-            if dest == 0x1e:
-                dest = self.mem[self.get_next()]
-
-            # Handle literals in the source
-            if src == 0x1f:
-                src = self.get_next()
-
-            # Handle accessing memory
-            if src == 0x1e:
-                src = self.mem[self.get_next()]
 
             # Handle poping 
             if src == 0x18:
@@ -570,6 +554,32 @@ class CPU():
             if dest == 0x1A:
                 self.SP -= 1
                 dest = self.SP
+
+            # Handle literals in the destination
+            if dest == 0x1f:
+                dest = self.get_next()
+
+            # Handle accessing memory
+            if dest == 0x1e:
+                dest = self.get_next()
+
+            # Handle literals in the source
+            if src == 0x1f:
+                foo = self.get_next()
+                print("FOO: ", hex(foo))
+                src = foo 
+
+            # Handle accessing memory
+            if src == 0x1e:
+                src = self.mem[self.get_next()]
+
+        # Handle a failed conditional
+        if self.skip:
+            self.skip = False
+            return
+
+        # Handle basic opcodes
+        if op in REV_BASIC:
 
             # Handle opcodes
             if REV_BASIC[op] == "SET":
@@ -616,6 +626,12 @@ class CPU():
 
             elif REV_BASIC[op] == "IFB":
                 self.IFB(dest, src)
+
+        # Non-basic OPCODES
+        elif dest in REV_NON_BASIC and op == 0x0: 
+
+            if REV_NON_BASIC[dest] == "JSR":
+                self.JSR(src)
 
     def load(self, program):
 
