@@ -149,6 +149,34 @@ class CPU():
 
         self.cycle(cycle)
 
+    def handle_div_mod(self, dest, src, func, cycle, overflow):
+
+        if self.is_reg(dest):
+            if dest == 0x1C:
+                if src == 0:
+                    self.PC = 0
+                else:
+                    self.PC = func(self.PC, src)
+
+            else:
+                if src == 0:
+                    self.regs[dest] = 0
+                else:
+                    self.regs[dest] = func(self.regs[dest], src)
+
+        else:
+            if src == 0:
+                self.mem[dest] = 0
+            else:
+                self.mem[dest] = func(self.mem[dest], src)
+
+        if overflow != None:
+            if src == 0:
+                self.O = 0
+            else:
+                self.O = overflow
+            
+        self.cycle(cycle)
 
     def IFB(self, dest, src):
 
@@ -278,26 +306,8 @@ class CPU():
                 None
         """
 
-        if self.is_reg(dest):
-            if dest == 0x1C:
-                if src == 0:
-                    self.PC = 0
-                else:
-                    self.PC %= src
+        return dest%mod
 
-            else:
-                if src == 0:
-                    self.regs[dest] = 0
-                else:
-                    self.regs[dest] %= src
-
-        else:
-            if src == 0:
-                self.mem[dest] = 0
-            else:
-                self.mem[dest] %= src
-
-        self.cycle(3)
 
     def SUB(self, dest, src):
 
@@ -351,33 +361,8 @@ class CPU():
                 None
         """
 
-        if self.is_reg(dest):
-            if dest == 0x1C:
-                if src == 0:
-                    self.PC = 0
-                else:
-                    self.PC /= src
-
-            else:
-                if src == 0:
-                    self.regs[dest] = 0 
-                else:
-                    self.regs[dest] /= src
-
-        else:
-            if src == 0:
-                self.mem[dest] = 0
-            else:
-                self.mem[dest] /= src
-
-        if src == 0:
-            self.O = 0
-        else:
-            # Magic
-            self.O = ((dest<<16)/src)&0xFFFF
-
-        self.cycle(3)
-
+        return dest/src
+        
     def step(self):
 
         """
@@ -470,10 +455,10 @@ class CPU():
                 self.handle_math(dest, src, self.MUL, 2, ((dest*src)>>16)&0xFFFF)
 
             elif REV_BASIC[op] == "DIV":
-                self.DIV(dest, src)
+                self.handle_div_mod(dest, src, self.DIV, 3, ((dest<<16)/src)&0xFFFF)
 
             elif REV_BASIC[op] == "MOD":
-                self.MOD(dest, src)
+                self.handle_div_mod(dest, src, self.MOD, 3, None)
 
             elif REV_BASIC[op] == "SHL":
                 self.handle_math(dest, src, self.SHL, 2, ((dest<<src)>>16)&0xFFFF)
