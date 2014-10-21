@@ -109,6 +109,47 @@ class CPU():
         self.mem[self.SP] = self.PC
         self.PC = dest
 
+    def handle_math(self, dest, src, func, cycle, overflow):
+
+        if self.is_reg(dest):
+            if dest == 0x1C:
+                self.PC = func(self.PC, src)
+
+            else:
+                self.regs[dest] = func(self.regs[dest], src)
+
+        else:
+            self.mem[dest] = func(self.mem[dest], src)
+
+        self.cycle(cycle)
+
+        if overflow != None:
+            self.O = overflow
+
+    def handle_if(self, dest, src, func, cycle):
+        
+        if self.is_reg(dest):
+            if dest == 0x1C:
+                if func(self.PC, src):
+                    pass
+                else:
+                    self.skip = True
+
+            else:
+                if func(self.regs[dest], src):
+                    pass
+                else:
+                    self.skip = True
+
+        else:
+            if func(self.mem[dest], src):
+                pass
+            else:
+                self.skip = True
+
+        self.cycle(cycle)
+
+
     def IFB(self, dest, src):
 
         """
@@ -120,25 +161,7 @@ class CPU():
                 None
         """
 
-        if self.is_reg(dest):
-            if dest == 0x1C:
-                if (self.PC & src) != 0:
-                    pass
-                else:
-                    self.skip = True
-            else:
-                if (self.regs[dest] & src) != 0:
-                    pass
-                else:
-                    self.skip = True
-        else:
-            if (self.mem[dest] & src):
-                pass
-            else:
-                self.skip = True
-
-        self.cycle(2)
-
+        return (self.PC & src) != 0
 
     def IFG(self, dest, src):
 
@@ -151,27 +174,7 @@ class CPU():
                 None
         """
 
-        if self.is_reg(dest):
-            if dest == 0x1C:
-                if self.PC > src:
-                    pass
-                else:
-                    self.skip = True
-
-            else:
-                if self.regs[dest] > src:
-                    pass
-                else:
-                    self.skip = True
-
-        else:
-            if self.mem[dest] > src:
-                pass
-            else:
-                self.skip = True
-
-        self.cycle(2)
-
+        return dest > src 
 
     def IFN(self, dest, src):
 
@@ -184,28 +187,8 @@ class CPU():
                 None
         """
 
-        if self.is_reg(dest):
-            if dest == 0x1C:
-                if self.PC != src:
-                    pass
-                else:
-                    self.skip = True
-
-            else:
-                if self.regs[dest] != src:
-                    pass
-                else:
-                    self.skip = True
-
-        else:
-            if self.mem[dest] != src:
-                pass
-            else:
-                self.skip = True
-
-        self.cycle(2)
-
-
+        return dest != src 
+    
     def IFE(self, dest, src):
 
         """
@@ -217,26 +200,7 @@ class CPU():
                 None
         """
 
-        if self.is_reg(dest):
-            if dest == 0x1C:
-                if self.PC == src:
-                    pass
-                else:
-                    self.skip = True
-
-            else:
-                if self.regs[dest] == src:
-                    pass
-                else:
-                    self.skip = True
-
-        else:
-            if self.mem[dest] == src:
-                pass
-            else:
-                self.skip = True
-
-        self.cycle(2)
+        return dest == src
 
     def XOR(self, dest, src):
         
@@ -249,15 +213,7 @@ class CPU():
                 None
         """
 
-        if self.is_reg(dest):
-            if dest == 0x1C:
-                self.PC ^= src
-            else:
-                self.regs[dest] ^= src
-        else:
-            self.mem[dest] ^= src
-
-        self.cycle(1)
+        return dest^src 
 
     def BOR(self, dest, src):
         
@@ -270,21 +226,12 @@ class CPU():
                 None
         """
 
-        if self.is_reg(dest):
-            if dest == 0x1C:
-                self.PC |= src
-            else:
-                self.regs[dest] |= src
-
-        else:
-            self.mem[dest] |= src
-
-        self.cycle(1)
+        return dest|src 
 
     def AND(self, dest, src):
 
         """
-        Sets the given destination to destination^src.
+        Sets the given destination to destination&src.
         Args:
                 dest - The destination to set
                 src  - The thing to and the destination by
@@ -292,15 +239,7 @@ class CPU():
                 None
         """
 
-        if self.is_reg(dest):
-            if dest == 0x1C:
-                self.PC &= src
-            else:
-                self.regs[dest] &= src
-        else:
-            self.mem[dest] &= src
-
-        self.cycle(1)
+        return dest&src 
 
     def SHR(self, dest, src):
 
@@ -312,20 +251,8 @@ class CPU():
         Returns:
                 None
         """
-        
-        if self.is_reg(dest):
-            if dest == 0x1C:
-                self.PC = self.PC >> src
 
-            else:
-                self.regs[dest] = self.regs[dest] >> src
-
-        else:
-            self.mem[dest] = self.mem[dest] >> src
-
-        self.O = ((dest<<16)>>src)&0xFFFF
-
-        self.cycle(2)
+        return dest >> src 
 
     def SHL(self, dest, src):
 
@@ -338,19 +265,7 @@ class CPU():
                 None
         """
 
-
-        if self.is_reg(dest):
-            if dest == 0x1C:
-                self.PC = self.PC << src
-            else:
-                self.regs[dest] = self.regs[dest] << src
-
-        else:
-            self.mem[dest] = self.mem[dest] << src
-
-        self.O = ((dest<<src)>>16)&0xFFFF
-
-        self.cycle(2)
+        return dest << src
 
     def MOD(self, dest, src):
 
@@ -396,17 +311,7 @@ class CPU():
         """
 
         # FIXME: Underflows are not detected. 
-
-        if self.is_reg(dest):
-            if dest == 0x1C:
-                self.PC -= src
-
-            else:
-                self.regs[dest] -= src
-        else:
-            self.mem[dest] -= src
-
-        self.cycle(2)
+        return dest - src
 
     def ADD(self, dest, src):
 
@@ -420,18 +325,7 @@ class CPU():
         """
 
         # FIXME: Overflows are not detected.
-
-        if self.is_reg(dest):
-            if dest == 0x1C:
-                self.PC += src
-
-            else:
-                self.regs[dest] += src
-
-        else:
-            self.mem[dest] += src
-
-        self.cycle(2)
+        return dest + src
 
     def MUL(self, dest, src):
         
@@ -444,20 +338,7 @@ class CPU():
                 None
         """
 
-        if self.is_reg(dest):
-            if dest == 0x1C:
-                self.PC *= src
-
-            else:
-                self.regs[dest] *= src
-
-        else:
-            self.mem[dest] *= src
-
-        # Magic
-        self.O = ((dest*src)>>16)&0xFFFF
-
-        self.cycle(2)
+        return dest * src
 
     def DIV(self, dest, src):
 
@@ -565,7 +446,7 @@ class CPU():
 
             # Handle accessing memory
             if src == 0x1e:
-                src = self.get_next()
+                src = self.mem[self.get_next()]
 
         # Handle a failed conditional
         if self.skip:
@@ -580,13 +461,13 @@ class CPU():
                 self.SET(dest, src)
 
             elif REV_BASIC[op] == "ADD":
-                self.ADD(dest, src)
+                self.handle_math(dest, src, self.ADD, 2, None)
 
             elif REV_BASIC[op] == "SUB":
-                self.SUB(dest, src)
+                self.handle_math(dest, src, self.SUB, 2, None)
 
             elif REV_BASIC[op] == "MUL":
-                self.MUL(dest, src)
+                self.handle_math(dest, src, self.MUL, 2, ((dest*src)>>16)&0xFFFF)
 
             elif REV_BASIC[op] == "DIV":
                 self.DIV(dest, src)
@@ -595,33 +476,33 @@ class CPU():
                 self.MOD(dest, src)
 
             elif REV_BASIC[op] == "SHL":
-                self.SHL(dest, src)
+                self.handle_math(dest, src, self.SHL, 2, ((dest<<src)>>16)&0xFFFF)
 
             elif REV_BASIC[op] == "SHR":
-                self.SHR(dest, src)
+                self.handle_math(dest, src, self.SHR, 2, ((dest<<16)>>src)&0xFFFF)
 
             elif REV_BASIC[op] == "BOR":
-                self.BOR(dest, src)
+                self.handle_math(dest, src, self.BOR, 1, None)
 
             elif REV_BASIC[op] == "XOR":
-                self.XOR(dest, src)
+                self.handle_math(dest, src, self.XOR, 1, None)
 
             elif REV_BASIC[op] == "AND":
-                self.AND(dest, src)
+                self.handle_math(dest, src, self.AND, 1, None)
 
             elif REV_BASIC[op] == "IFE":
-                self.IFE(dest, src)
+                self.handle_if(dest, src, self.IFE, 2)
 
             elif REV_BASIC[op] == "IFN":
-                self.IFN(dest, src)
+                self.handle_if(dest, src, self.IFN, 2)
 
             elif REV_BASIC[op] == "IFG":
-                self.IFG(dest, src)
+                self.handle_if(dest, src, self.IFG, 2)
 
             elif REV_BASIC[op] == "IFB":
-                self.IFB(dest, src)
+                self.handle_if(dest, src, self.IFB, 2)
 
-        # Non-basic OPCODES
+        # Non-basic OPCODES. Note, because of the way we decode opcodes, dest will be the opcode, and src will be the dest, in the case of a non-basic-opcode.
         elif dest in REV_NON_BASIC and op == 0x0: 
 
             if REV_NON_BASIC[dest] == "JSR":
