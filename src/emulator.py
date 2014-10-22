@@ -82,28 +82,6 @@ class CPU():
 
         return [op, dest, src]
 
-    def SET(self, dest, src):
-
-        """
-        Sets the given location to the src.
-        Args:
-                dest - The destination to set.
-                src  - The thing to set the destination to.
-        Returns:
-                None
-        """
-
-        if self.is_reg(dest):
-            if dest == 0x1C:
-                self.PC = src
-            else:
-                self.regs[dest] = src
-
-        else:
-            self.mem[dest] = src
-
-        self.cycle(1)
-
     def JSR(self, dest):
         self.SP -= 1
         self.mem[self.SP] = self.PC
@@ -177,191 +155,6 @@ class CPU():
                 self.O = overflow
             
         self.cycle(cycle)
-
-    def IFB(self, dest, src):
-
-        """
-        Executes the next instruction if (dest & src) != 0
-        Args:
-                dest - The destination to test against
-                src  - The src to test against
-        Returns:
-                None
-        """
-
-        return (self.PC & src) != 0
-
-    def IFG(self, dest, src):
-
-        """
-        Executes the next instruction if dest > src
-        Args:
-                dest - The destination to test against
-                src  - The src to test against
-        Returns:
-                None
-        """
-
-        return dest > src 
-
-    def IFN(self, dest, src):
-
-        """
-        Executes the next instruction if dest != src
-        Args:
-                dest - The destination to test against
-                src  - The src to test against
-        Returns:
-                None
-        """
-
-        return dest != src 
-    
-    def IFE(self, dest, src):
-
-        """
-        Executes the next instruction if dest == src
-        Args:
-                dest - The destination to test against
-                src  - The src to test against
-        Returns:
-                None
-        """
-
-        return dest == src
-
-    def XOR(self, dest, src):
-        
-        """
-        Sets the given destination to destination^src
-        Args:
-                dest - The destination to set
-                src  - The thing to xor the desintation by
-        Returns:
-                None
-        """
-
-        return dest^src 
-
-    def BOR(self, dest, src):
-        
-        """
-        Sets the given destination to destination|src.
-        Args:
-                dest - The destination to set
-                src  - The thing to or the destination by
-        Returns:
-                None
-        """
-
-        return dest|src 
-
-    def AND(self, dest, src):
-
-        """
-        Sets the given destination to destination&src.
-        Args:
-                dest - The destination to set
-                src  - The thing to and the destination by
-        Returns:
-                None
-        """
-
-        return dest&src 
-
-    def SHR(self, dest, src):
-
-        """
-        Sets the given destination to destination >> src, and O to ((dest<<16)>>src)&0xFFFF
-        Args:
-                dest - The destination to set
-                src  - The thing to shift the desination by
-        Returns:
-                None
-        """
-
-        return dest >> src 
-
-    def SHL(self, dest, src):
-
-        """
-        Sets the given destination to destination << src, and O to ((dest<>16)&0xFFFF)
-        Args:
-                dest - The destination to set
-                src  - The thing to shift the destination by
-        Returns:
-                None
-        """
-
-        return dest << src
-
-    def MOD(self, dest, src):
-
-        """
-        Sets the given destination to destination%src. If src == 0, sets the destination to 0. 
-        Args:
-                dest - The destination to set
-                src  - The thing to mod the destination to.
-        Returns:
-                None
-        """
-
-        return dest%mod
-
-
-    def SUB(self, dest, src):
-
-        """
-        Sets dest to dest - src
-        Args:
-                dest - The destination to set.
-                src  - The thing to subtract from the destination.
-        Returns:
-                None
-        """
-
-        # FIXME: Underflows are not detected. 
-        return dest - src
-
-    def ADD(self, dest, src):
-
-        """
-        Sets dest to dest + src
-        Args:
-                dest - The destination to set.
-                src  - The thing to add to the destination.
-        Returns:
-                None
-        """
-
-        # FIXME: Overflows are not detected.
-        return dest + src
-
-    def MUL(self, dest, src):
-        
-        """
-        Sets dest to dest * src, and O to ((dest*src)>>16)&0xFFFF.
-        Args:
-                dest - The destination.
-                src  - The thing to multiply the destination to.
-        Returns:
-                None
-        """
-
-        return dest * src
-
-    def DIV(self, dest, src):
-
-        """
-        Sets dest to dest/src, and O to ((dest/src)<<16)&0xFFFF if src != 0. If src == 0, then O = 0, and dest = 0.
-        Args:
-                dest - The destination 
-                src  - The thing to divide the destination by.
-        Returns:
-                None
-        """
-
-        return dest/src
         
     def step(self):
 
@@ -443,49 +236,49 @@ class CPU():
 
             # Handle opcodes
             if REV_BASIC[op] == "SET":
-                self.SET(dest, src)
+                self.handle_math(dest, src, (lambda x, y: y), 1, None)
 
             elif REV_BASIC[op] == "ADD":
-                self.handle_math(dest, src, self.ADD, 2, None)
+                self.handle_math(dest, src, (lambda x, y: x + y), 2, None)
 
             elif REV_BASIC[op] == "SUB":
-                self.handle_math(dest, src, self.SUB, 2, None)
+                self.handle_math(dest, src, (lambda x, y: x - y), 2, None)
 
             elif REV_BASIC[op] == "MUL":
-                self.handle_math(dest, src, self.MUL, 2, ((dest*src)>>16)&0xFFFF)
+                self.handle_math(dest, src, (lambda x, y: x * y), 2, ((dest*src)>>16)&0xFFFF)
 
             elif REV_BASIC[op] == "DIV":
-                self.handle_div_mod(dest, src, self.DIV, 3, ((dest<<16)/src)&0xFFFF)
+                self.handle_div_mod(dest, src, (lambda x, y: x/y), 3, ((dest<<16)/src)&0xFFFF)
 
             elif REV_BASIC[op] == "MOD":
-                self.handle_div_mod(dest, src, self.MOD, 3, None)
+                self.handle_div_mod(dest, src, (lambda x, y: x%y), 3, None)
 
             elif REV_BASIC[op] == "SHL":
-                self.handle_math(dest, src, self.SHL, 2, ((dest<<src)>>16)&0xFFFF)
+                self.handle_math(dest, src, (lambda x, y: x << y), 2, ((dest<<src)>>16)&0xFFFF)
 
             elif REV_BASIC[op] == "SHR":
-                self.handle_math(dest, src, self.SHR, 2, ((dest<<16)>>src)&0xFFFF)
+                self.handle_math(dest, src, (lambda x, y: x >> y), 2, ((dest<<16)>>src)&0xFFFF)
 
             elif REV_BASIC[op] == "BOR":
-                self.handle_math(dest, src, self.BOR, 1, None)
+                self.handle_math(dest, src, (lambda x, y: x|y), 1, None)
 
             elif REV_BASIC[op] == "XOR":
-                self.handle_math(dest, src, self.XOR, 1, None)
+                self.handle_math(dest, src, (lambda x, y: x^y), 1, None)
 
             elif REV_BASIC[op] == "AND":
-                self.handle_math(dest, src, self.AND, 1, None)
+                self.handle_math(dest, src, (lambda x, y: x&y), 1, None)
 
             elif REV_BASIC[op] == "IFE":
-                self.handle_if(dest, src, self.IFE, 2)
+                self.handle_if(dest, src, (lambda x, y: x == y), 2)
 
             elif REV_BASIC[op] == "IFN":
-                self.handle_if(dest, src, self.IFN, 2)
+                self.handle_if(dest, src, (lambda x, y: x != y), 2)
 
             elif REV_BASIC[op] == "IFG":
-                self.handle_if(dest, src, self.IFG, 2)
+                self.handle_if(dest, src, (lambda x, y: x > y), 2)
 
             elif REV_BASIC[op] == "IFB":
-                self.handle_if(dest, src, self.IFB, 2)
+                self.handle_if(dest, src, (lambda x, y: (x&y) != 0), 2)
 
         # Non-basic OPCODES. Note, because of the way we decode opcodes, dest will be the opcode, and src will be the dest, in the case of a non-basic-opcode.
         elif dest in REV_NON_BASIC and op == 0x0: 
