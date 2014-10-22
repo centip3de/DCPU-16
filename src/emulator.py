@@ -3,7 +3,6 @@ from opcodes import *
 
 """
 Todo:
-    - Decrapify the code, i.e., let's not have 100 functions that do the same thing except 1 action. 
     - Handle overflows/underflows
     - Possibly get registers to work when called in the src
 """
@@ -89,6 +88,18 @@ class CPU():
 
     def handle_math(self, dest, src, func, cycle, overflow):
 
+        """
+        Handles all basic math operations (and SET) by setting the dest to func(dest, src).
+        Args:
+                dest     - The destination of the operation
+                src      - The source of the operation
+                func     - The function to apply
+                cycle    - The amount of cycles to cycle after the operation
+                overflow - What to set the overflow register to (Set overflow to None if you don't want to change it)
+        Returns:
+                None
+        """
+
         if self.is_reg(dest):
             if dest == 0x1C:
                 self.PC = func(self.PC, src)
@@ -105,6 +116,15 @@ class CPU():
             self.O = overflow
 
     def handle_if(self, dest, src, func, cycle):
+
+        """
+        Handles all conditional statements by setting self.skip to True if func(dest, src) evaluates to false. 
+        Args:
+                dest  - The destination of the operation
+                src   - The source of the operation
+                func  - The function to apply
+                cycle - The amount of cycles to cycle after the operation
+        """
         
         if self.is_reg(dest):
             if dest == 0x1C:
@@ -128,6 +148,16 @@ class CPU():
         self.cycle(cycle)
 
     def handle_div_mod(self, dest, src, func, cycle, overflow):
+
+        """
+        Handles DIV and MOD operations, as they are handled slightly differently than anything else.
+        Args:
+                dest     - The destination of the oepration
+                src      - The source of the operation
+                func     - The function to apply
+                cycle    - The amount of cycles to cycle after the operation
+                overflow - What to set the overflow register to, after the operation. 
+        """
 
         if self.is_reg(dest):
             if dest == 0x1C:
