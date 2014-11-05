@@ -188,6 +188,8 @@ class CPU():
         
     def step(self):
 
+        print("PC: ", self.PC)
+
         """
         Does a single step of execution (single opcode)
         Args:
@@ -325,6 +327,8 @@ class CPU():
         Returns:
                 None
         """
+
+        print(program)
 
         for i in range(len(program)):
             self.mem[i] = int(program[i], 0)
