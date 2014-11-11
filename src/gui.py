@@ -114,16 +114,8 @@ class Monitor():
         canvas.pack(fill=BOTH, expand=1)
 
 
-def main():
-
-    if len(sys.argv) != 2:
-        print("Usage: python3 gui.py <program.obj>")
-
-    # Get program contents
-    program = sys.argv[1]
-    fi = open(program, "r")
-    program = fi.read()
-
+def main(program):
+    
     # Create object and load contents
     cpu = emulator.CPU(program)
     cpu.load(cpu.text)
@@ -136,4 +128,14 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    if len(sys.argv) != 2:
+        print("Usage: python3 gui.py <program.obj>")
+        exit(1)
+     
+    # Get program contents
+    program = sys.argv[1]
+    fi = open(program, "r")
+    program = fi.read()
+    fi.close()
+
+    main(program)
