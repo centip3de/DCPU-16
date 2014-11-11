@@ -191,7 +191,7 @@ class Parser():
 
         return cleaned
         
-def main():
+def main(filepath):
 
     # Entry point of the program. Takes the file as an arg, parses it, and outputs it in an object file matching the original file name.  
     # Args:
@@ -199,12 +199,8 @@ def main():
     # Returns:
     #       None
 
-    if len(sys.argv) != 2:
-        print("Usage: python3 assemble.py file.dasm")
-        exit(1)
-
-    filepath = sys.argv[1]
-    filename = sys.argv[1].split(".")[0]
+    
+    filename = filepath.split(".")[0]
 
     fi = open(filepath, "r")
     fo = open(filename + ".obj", "w")
@@ -217,4 +213,8 @@ def main():
     fo.close()
 
 if __name__ == '__main__':
-    main()
+    if len(sys.argv) != 2:
+        print("Usage: python3 assemble.py file.dasm")
+        exit(1)
+
+    main(sys.argv[1])
