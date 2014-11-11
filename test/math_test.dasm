@@ -1,0 +1,12 @@
+SET A 0x30
+SUB A 1
+
+SET B 0x30
+ADD B 1
+
+SET C 0x20
+SET X 0x50
+SUB X [C]
+
+SET Y 0x10
+MOD Y 0x10
