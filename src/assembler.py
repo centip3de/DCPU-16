@@ -1,4 +1,5 @@
 import sys
+import os
 from opcodes import *
 
 class Parser():
@@ -200,7 +201,7 @@ def main(filepath):
     #       None
 
     
-    filename = filepath.split(".")[0]
+    filename = os.path.splitext(filepath)[0]
 
     fi = open(filepath, "r")
     fo = open(filename + ".obj", "w")
