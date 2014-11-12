@@ -12,7 +12,7 @@ class CPU():
     def __init__(self, text):
         self.text = text.split()
         self.skip = False
-        self.mem = [0]*0x10000
+        self.mem = [0]*0x1000
         self.regs = [0] * 8
         self.PC = 0
         self.O = 0
@@ -356,7 +356,7 @@ class CPU():
 
         return (reg in REV_VALUES) and ((reg >= 0x0 and reg <= 0x07) or (reg >= 0x1B and reg <= 0x1D))
 
-def main():
+def main(filepath):
 
     """
     Entry point of the program.
@@ -366,16 +366,18 @@ def main():
             None
     """
 
-    if len(sys.argv) != 2:
-        print("Usage: python3 emulator.py file.obj")
-        exit(1)
-    
-    filepath = sys.argv[1]
+        
     fi = open(filepath, "r")
     text = fi.read()
+    fi.close()
 
     cpu = CPU(text)
     cpu.run()
 
+
 if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Usage: python3 emulator.py file.obj")
+        exit(1)
+
     main()
