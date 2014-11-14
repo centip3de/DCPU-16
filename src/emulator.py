@@ -12,7 +12,7 @@ class CPU():
     def __init__(self, text):
         self.text = text.split()
         self.skip = False
-        self.mem = [0]*0x1000
+        self.mem = [0]*0x10000
         self.regs = [0] * 8
         self.PC = 0
         self.O = 0
@@ -185,7 +185,73 @@ class CPU():
                 self.O = overflow
             
         self.cycle(cycle)
-        
+
+    def handle_src(self, src):
+
+        src = src
+
+        # Handle literal bitpacking in the source
+        if src >= 0x20 and src <= 0x3f:
+                src -= 32
+        else:
+            
+            if src >= 0x10 and src <= 0x17:
+                src = self.regs[src - 0x10] + self.get_next()
+
+            # Handle accessing register memory 
+            if src in REV_VALUES and (src >= 0x08 and src <=0x0F):
+                src = self.regs[src - 0x08] 
+
+            # Handle poping 
+            if src == 0x18:
+                src = self.mem[self.SP]
+                self.SP += 1
+
+            # Handle peeking
+            if src == 0x19:
+                src = self.mem[self.SP]
+
+            # Handle literals in the source
+            if src == 0x1f:
+                src = self.get_next()
+
+            # Handle accessing memory
+            if src == 0x1e:
+                src = self.mem[self.get_next()]
+
+        return src
+
+    def handle_dest(self, src):
+
+        dest = src
+
+        # Handle literal bitpacking in the source
+        if dest >= 0x20 and dest <= 0x3f:
+               dest -= 32
+        else:
+            
+            if dest >= 0x10 and dest <= 0x17:
+                dest = self.regs[dest - 0x10] + self.get_next()
+
+            # Handle accesssing register memory
+            if dest in REV_VALUES and (dest >= 0x08 and dest <=0x0F):
+                dest = self.regs[dest - 0x08]
+
+            # Handle pushing 
+            if dest == 0x1A:
+                self.SP -= 1
+                dest = self.SP
+
+            # Handle literals in the destination
+            if dest == 0x1f:
+                dest = self.get_next()
+
+            # Handle accessing memory
+            if dest == 0x1e:
+                dest = self.get_next()
+
+        return dest
+
     def step(self):
 
         """
@@ -201,60 +267,8 @@ class CPU():
         dest = word[1]
         src  = word[2]
 
-        # Handle literal bitpacking in the source
-        if (src >= 0x20 and src <= 0x3f) or (dest >= 0x20 and dest <= 0x3f):
-            if src >= 0x20 and src <= 0x3f:
-                src -= 32
-
-            # Handle literal bitpacking in the destination
-            if dest >= 0x20 and dest <= 0x3f:
-               dest -= 32
-
-        else:
-
-            if src >= 0x10 and src <= 0x17:
-                src = self.regs[src - 0x10] + self.get_next()
-
-            if dest >= 0x10 and dest <= 0x17:
-                dest = self.regs[dest - 0x10] + self.get_next()
-
-            # Handle accessing register memory 
-            if src in REV_VALUES and (src >= 0x08 and src <=0x0F):
-                src = self.regs[src - 0x08] 
-
-            # Handle accesssing register memory
-            if dest in REV_VALUES and (dest >= 0x08 and dest <=0x0F):
-                dest = self.regs[dest - 0x08]
-
-            # Handle poping 
-            if src == 0x18:
-                src = self.mem[self.SP]
-                self.SP += 1
-
-            # Handle peeking
-            if src == 0x19:
-                src = self.mem[self.SP]
-
-            # Handle pushing 
-            if dest == 0x1A:
-                self.SP -= 1
-                dest = self.SP
-
-            # Handle literals in the destination
-            if dest == 0x1f:
-                dest = self.get_next()
-
-            # Handle accessing memory
-            if dest == 0x1e:
-                dest = self.get_next()
-
-            # Handle literals in the source
-            if src == 0x1f:
-                src = self.get_next()
-
-            # Handle accessing memory
-            if src == 0x1e:
-                src = self.mem[self.get_next()]
+        src = self.handle_src(src)
+        dest = self.handle_dest(dest)
 
         # Handle a failed conditional
         if self.skip:
@@ -380,4 +394,4 @@ if __name__ == "__main__":
         print("Usage: python3 emulator.py file.obj")
         exit(1)
 
-    main()
+    main(sys.argv[1])
