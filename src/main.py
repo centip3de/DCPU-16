@@ -6,6 +6,16 @@ import argparse
 
 def main():
 
+    """ 
+    Entry point of the program. Takes in the arguments, parses them, 
+    and calls the assembler/emulator/gui as appropriate.
+
+    Args:
+        None
+    Returns:
+        None
+    """
+
     parser = argparse.ArgumentParser(description = "Automate the assembling and emulation of the given file.")
     parser.add_argument("filepath", help="The path to the .dasm file to run.")
     parser.add_argument("-g", action="store_true", help="Enable the GUI") 
