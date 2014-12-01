@@ -4,7 +4,7 @@ from opcodes import *
 """
 Todo:
     - Handle overflows/underflows
-    - Possibly get registers to work when called in the src
+    - Get that compiler to work doe
 """
 
 class CPU():
@@ -38,7 +38,7 @@ class CPU():
     def reg_dump(self):
 
         """
-        Prints out every register excluding O and SP.
+        Prints out every register excluding O and SP if the debug flag is set.
         Args:
                 None
         Returns:
@@ -104,6 +104,9 @@ class CPU():
             if dest == 0x1C:
                 self.PC = func(self.PC, src)
 
+            elif dest == 0x1B:
+                self.SP = func(self.SP, src)
+
             else:
                 self.regs[dest] = func(self.regs[dest], src)
 
@@ -129,6 +132,12 @@ class CPU():
         if self.is_reg(dest):
             if dest == 0x1C:
                 if func(self.PC, src):
+                    pass
+                else:
+                    self.skip = True
+
+            elif dest == 0x1B:
+                if func(self.SP, src);
                     pass
                 else:
                     self.skip = True
@@ -165,6 +174,12 @@ class CPU():
                     self.PC = 0
                 else:
                     self.PC = func(self.PC, src)
+
+            elif dest == 0x1B:
+                if src == 0:
+                    self.SP = 0
+                else:
+                    self.SP = func(self.SP, src)
 
             else:
                 if src == 0:
@@ -267,6 +282,7 @@ class CPU():
         dest = word[1]
         src  = word[2]
 
+
         src = self.handle_src(src)
         dest = self.handle_dest(dest)
 
@@ -320,9 +336,6 @@ class CPU():
 
             elif REV_BASIC[op] == "IFG":
                 self.handle_if(dest, src, (lambda x, y: x > y), 2)
-
-            elif REV_BASIC[op] == "IFB":
-                self.handle_if(dest, src, (lambda x, y: (x&y) != 0), 2)
 
         # Non-basic OPCODES. Note, because of the way we decode opcodes, dest will be the opcode, and src will be the dest, in the case of a non-basic-opcode.
         elif dest in REV_NON_BASIC and op == 0x0: 
