@@ -212,8 +212,7 @@ class CPU():
         else:
             
             if src >= 0x10 and src <= 0x17:
-                foo = self.get_next()
-                src = self.mem[self.regs[src - 0x10] + foo]
+                src = self.mem[self.regs[src - 0x10] + self.get_next()]
 
             if src == 0x1B: 
                 src = self.SP
