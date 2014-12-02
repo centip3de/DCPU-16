@@ -51,6 +51,7 @@ class CPU():
 
         print("PC: " + str(hex(self.PC)))
         print("O: " + str(hex(self.O)))
+        print("SP: " + str(hex(self.SP)))
 
     def cycle(self, amount):
         
@@ -137,7 +138,7 @@ class CPU():
                     self.skip = True
 
             elif dest == 0x1B:
-                if func(self.SP, src);
+                if func(self.SP, src):
                     pass
                 else:
                     self.skip = True
@@ -211,11 +212,15 @@ class CPU():
         else:
             
             if src >= 0x10 and src <= 0x17:
-                src = self.regs[src - 0x10] + self.get_next()
+                foo = self.get_next()
+                src = self.mem[self.regs[src - 0x10] + foo]
+
+            if src == 0x1B: 
+                src = self.SP
 
             # Handle accessing register memory 
             if src in REV_VALUES and (src >= 0x08 and src <=0x0F):
-                src = self.regs[src - 0x08] 
+                src = self.mem[self.regs[src - 0x08]]
 
             # Handle poping 
             if src == 0x18:
@@ -234,6 +239,7 @@ class CPU():
             if src == 0x1e:
                 src = self.mem[self.get_next()]
 
+            
         return src
 
     def handle_dest(self, src):
@@ -283,8 +289,8 @@ class CPU():
         src  = word[2]
 
 
-        src = self.handle_src(src)
         dest = self.handle_dest(dest)
+        src = self.handle_src(src)
 
         # Handle a failed conditional
         if self.skip:
