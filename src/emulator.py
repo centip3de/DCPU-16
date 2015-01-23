@@ -82,6 +82,9 @@ class CPU():
 
         return [op, dest, src]
 
+    def setmem(self, dest, value):
+        self.mem[dest] = value
+
     def JSR(self, dest):
         self.SP -= 1
         self.mem[self.SP] = self.PC
@@ -112,7 +115,7 @@ class CPU():
                 self.regs[dest] = func(self.regs[dest], src)
 
         else:
-            self.mem[dest] = func(self.mem[dest], src)
+            self.setmem(dest, func(self.mem[dest], src))
 
         self.cycle(cycle)
 
@@ -190,9 +193,9 @@ class CPU():
 
         else:
             if src == 0:
-                self.mem[dest] = 0
+                self.setmem(self, dest, 0)
             else:
-                self.mem[dest] = func(self.mem[dest], src)
+                self.setmem(self, dest, func(self.mem[dest], src))
 
         if overflow != None:
             if src == 0:
@@ -238,7 +241,6 @@ class CPU():
             if src == 0x1e:
                 src = self.mem[self.get_next()]
 
-            
         return src
 
     def handle_dest(self, src):
@@ -286,7 +288,6 @@ class CPU():
         op = word[0]
         dest = word[1]
         src  = word[2]
-
 
         dest = self.handle_dest(dest)
         src = self.handle_src(src)
