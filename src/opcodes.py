@@ -23,7 +23,6 @@ VALUES = {
     "PC" : 0x1C, 
     "O" : 0x1D }
 
-# Keep it simple for testing
 BASIC_OPCODES = {
     "SET" : 0x01 , 
     "ADD" : 0x02, 
@@ -32,18 +31,17 @@ BASIC_OPCODES = {
     "DIV" : 0x05, 
     "MOD" : 0x06, 
     "SHL" : 0x07, 
-    "SHR" : 0x08, 
+    "SHR" : 0x08,
     "AND" : 0x09, 
-    "BOR" : 0x0A, 
-    "XOR" : 0x0B, 
+    "BOR" : 0x0A,
+    "XOR" : 0x0B,
     "IFE" : 0x0C, 
     "IFN" : 0x0D, 
-    "IFG" : 0x0E, 
-    "IFB" : 0x0F }
+    "IFG" : 0x0E,
+    "IFB" : 0x0F}
 
-# Basically only has JSR
 NON_BASIC_OPCODES = {
-    "JSR" : 0x01 }
+    "JSR" : 0x01} 
 
 # Reverse lookups
 REV_VALUES = {value : key for (key, value) in VALUES.items()}

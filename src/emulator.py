@@ -1,4 +1,5 @@
 import sys
+from plugin import *
 from opcodes import *
 
 """
@@ -17,6 +18,7 @@ class CPU():
         self.PC = 0
         self.O = 0
         self.SP = 0xFFFF
+        self.mem_listner = MemoryListener(test_action)
 
     def run(self):
 
@@ -83,7 +85,10 @@ class CPU():
         return [op, dest, src]
 
     def setmem(self, dest, value):
+        print("[MEM]: Setting " + hex(dest) + " to " + hex(value))
+
         self.mem[dest] = value
+        PluginManager.notify(1, (dest, value))
 
     def JSR(self, dest):
         self.SP -= 1
@@ -407,6 +412,8 @@ def main(filepath):
     cpu = CPU(text)
     cpu.run()
 
+def test_action(data):
+    print("Called in Main, with data", data, "!")
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
@@ -414,3 +421,4 @@ if __name__ == "__main__":
         exit(1)
 
     main(sys.argv[1])
+

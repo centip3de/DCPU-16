@@ -107,7 +107,7 @@ class Parser():
         # Args:
         #       tokens - A list containing the given line split on white spaces.
         # Returns:
-        #       A list containing the compiled version of said line.
+        #       A list containing the assembled version of said line.
 
         # Handle the initial tokens
         op = BASIC_OPCODES[tokens[0]]
