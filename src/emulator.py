@@ -217,35 +217,35 @@ class CPU():
         if src >= 0x20 and src <= 0x3f:
                 src -= 32
         else:
-            
+
             if src >= 0x0 and src <= 0x07:
                 src = self.regs[src]
 
-            if src >= 0x10 and src <= 0x17:
+            elif src >= 0x10 and src <= 0x17:
                 src = self.mem[self.regs[src - 0x10] + self.get_next()]
 
-            if src == 0x1B: 
+            elif src == 0x1B: 
                 src = self.SP
 
             # Handle accessing register memory 
-            if src in REV_VALUES and (src >= 0x08 and src <=0x0F):
+            elif src in REV_VALUES and (src >= 0x08 and src <=0x0F):
                 src = self.mem[self.regs[src - 0x08]]
 
             # Handle poping 
-            if src == 0x18:
+            elif src == 0x18:
                 src = self.mem[self.SP]
                 self.SP += 1
 
             # Handle peeking
-            if src == 0x19:
+            elif src == 0x19:
                 src = self.mem[self.SP]
 
             # Handle literals in the source
-            if src == 0x1f:
+            elif src == 0x1f:
                 src = self.get_next()
 
             # Handle accessing memory
-            if src == 0x1e:
+            elif src == 0x1e:
                 src = self.mem[self.get_next()]
 
         return src
@@ -263,20 +263,20 @@ class CPU():
                 dest = self.regs[dest - 0x10] + self.get_next()
 
             # Handle accesssing register memory
-            if dest in REV_VALUES and (dest >= 0x08 and dest <=0x0F):
+            elif dest in REV_VALUES and (dest >= 0x08 and dest <=0x0F):
                 dest = self.regs[dest - 0x08]
 
             # Handle pushing 
-            if dest == 0x1A:
+            elif dest == 0x1A:
                 self.SP -= 1
                 dest = self.SP
 
             # Handle literals in the destination
-            if dest == 0x1f:
+            elif dest == 0x1f:
                 dest = self.get_next()
 
             # Handle accessing memory
-            if dest == 0x1e:
+            elif dest == 0x1e:
                 dest = self.get_next()
 
         return dest
