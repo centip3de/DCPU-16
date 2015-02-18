@@ -36,6 +36,7 @@ class Parser():
                 label = words.pop(0)
                 name = label[1:]
                 self.LABELS[name] = self.count 
+                continue
 
             if words[0] in BASIC_OPCODES:
                 compiled.append(self.handle_basic(words))
