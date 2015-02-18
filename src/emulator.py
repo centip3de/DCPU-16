@@ -18,7 +18,6 @@ class CPU():
         self.PC = 0
         self.O = 0
         self.SP = 0xFFFF
-        self.mem_listner = MemoryListener(test_action)
 
     def run(self):
 
@@ -219,6 +218,9 @@ class CPU():
                 src -= 32
         else:
             
+            if src >= 0x0 and src <= 0x07:
+                src = self.regs[src]
+
             if src >= 0x10 and src <= 0x17:
                 src = self.mem[self.regs[src - 0x10] + self.get_next()]
 
@@ -412,8 +414,6 @@ def main(filepath):
     cpu = CPU(text)
     cpu.run()
 
-def test_action(data):
-    print("Called in Main, with data", data, "!")
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
