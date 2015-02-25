@@ -143,16 +143,18 @@ class Monitor():
             #Update the image with a static pink
             #self.img.put("#FF00FF", (x,y))
 
-            #Update the image with the given RGB
+            #Update the image with the given RGB, upscale dat stuff.
             #Row 1
             self.img.put("#%02x%02x%02x" % (r*4,g*8,b*8), (x, y)) 
             self.img.put("#%02x%02x%02x" % (r*4,g*8,b*8), (x + 1, y)) 
             self.img.put("#%02x%02x%02x" % (r*4,g*8,b*8), (x + 2, y)) 
 
+            #Row 2
             self.img.put("#%02x%02x%02x" % (r*4,g*8,b*8), (x, y + 1)) 
             self.img.put("#%02x%02x%02x" % (r*4,g*8,b*8), (x + 1, y + 1)) 
             self.img.put("#%02x%02x%02x" % (r*4,g*8,b*8), (x + 2, y + 1)) 
 
+            #Row 3
             self.img.put("#%02x%02x%02x" % (r*4,g*8,b*8), (x, y + 2)) 
             self.img.put("#%02x%02x%02x" % (r*4,g*8,b*8), (x + 1, y + 2)) 
             self.img.put("#%02x%02x%02x" % (r*4,g*8,b*8), (x + 2, y + 2)) 
