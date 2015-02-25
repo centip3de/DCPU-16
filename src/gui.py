@@ -123,7 +123,14 @@ class Monitor():
         self.width              = 378
         self.height             = 288
         self.img                = PhotoImage(width=self.width, height=self.height)
+        self.canvas             = None
+        self.number_of_chars    = 0
         self.initUI()
+
+    def draw_text(self, x, y, char):
+        #Height of each letter is around 10 pixels, so start there. Then their width is 7 pixels-ish, so increase by that much. So yeah. 
+        self.canvas.create_text(x + 10 + (7 * self.number_of_chars), y + 10, text=char, fill="white") 
+        self.number_of_chars += 1
 
     def action(self, data):
         address = data[0]
@@ -172,11 +179,19 @@ class Monitor():
         self.frame.pack(fill=BOTH, expand=1)
 
         # Now less placeholder-y 
-        canvas = Canvas(self.frame, width=self.width, height=self.height, bg="#000")
-        canvas.pack(fill=BOTH, expand=1)
+        self.canvas = Canvas(self.frame, width=self.width, height=self.height, bg="#000")
+        self.canvas.pack(fill=BOTH, expand=1)
 
         # Need to create an image so we can place individual pixels 
-        canvas.create_image((self.width/2, self.height/2), image=self.img, state="normal")
+        self.canvas.create_image((self.width/2, self.height/2), image=self.img, state="normal")
+
+        #Test drawing characters. 
+        self.draw_text(0, 0, "H")
+        self.draw_text(1, 0, "e")
+        self.draw_text(2, 0, "l")
+        self.draw_text(3, 0, "l")
+        self.draw_text(4, 0, "o")
+        self.draw_text(5, 0, "!")
 
 class MemoryWatcher():
     
