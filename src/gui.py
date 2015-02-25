@@ -7,8 +7,6 @@ import sys
 import threading
 import time
 
-#FIXME: Freezes on infinite loop. :(
-
 class Main():
     def __init__(self, parent, CPU_object):
 
@@ -62,7 +60,7 @@ class Main():
         # Step through the program and update the registers
         self.cpu.step()
         self.update_regs()
-        time.sleep(1)
+        time.sleep(0.01)
 
         # Disable the buttons for step/run 
         if len(self.cpu.text) == self.cpu.PC:
@@ -71,13 +69,11 @@ class Main():
 
     def run(self):
 
-        # Stupid threads. WHO NEEDS YOU ANYWAY?!
         while(len(self.cpu.text) != self.cpu.PC):
             self.step_program()
 
     def run_program(self):
 
-        #Threading is hard. :(
         t = threading.Thread(target=self.run)
         t.start()
 
@@ -115,12 +111,11 @@ class Monitor():
         # Set up the initial variables/frame stuff
         self.parent             = parent        
         
-        # We need to upscale this somehow 
-        self.parent.geometry("120x90")
+        self.parent.geometry("378x288")
         self.frame              = Frame(parent)
         self.memory_listener    = MemoryListener(self.action)
-        self.width              = 120
-        self.height             = 90
+        self.width              = 378
+        self.height             = 288
         self.img                = PhotoImage(width=self.width, height=self.height)
         self.initUI()
 
@@ -132,12 +127,39 @@ class Monitor():
             pixel = address - 0x8000
             color = data[1]
 
-            print("[VIDEO]: Pixel,", hex(pixel), "set to,", hex(color))
+            # I don't think I'm getting the RGB values correctly...
+            # rrrrrrgggggbbbbb
+            r = (color >> 10) & 0b111111
+            g = (color >> 5)  & 0b11111
+            b = color & 0b11111
 
-            # No idea what this shit does. self.img.put should allow me to do pixels. 
-            for x in range(4 * self.width):
-                y = int(self.height/2 + self.height/4 * sin(x/80.0))
-                self.img.put("#ffffff", (x//4, y)) 
+            print("[VIDEO]: Pixel,", hex(pixel), "set to,", hex(data[1]), "(#%02x%02x%02x)" % (r,g,b))
+
+            #Calculate the x and y
+            x = (pixel%126)*3
+            y = ((pixel//126) + 3)*3
+            print("********************Y = ", y)
+
+            #Update the image with a static pink
+            #self.img.put("#FF00FF", (x,y))
+
+            #Update the image with the given RGB
+            #Row 1
+            self.img.put("#%02x%02x%02x" % (r*4,g*8,b*8), (x, y)) 
+            self.img.put("#%02x%02x%02x" % (r*4,g*8,b*8), (x + 1, y)) 
+            self.img.put("#%02x%02x%02x" % (r*4,g*8,b*8), (x + 2, y)) 
+
+            self.img.put("#%02x%02x%02x" % (r*4,g*8,b*8), (x, y + 1)) 
+            self.img.put("#%02x%02x%02x" % (r*4,g*8,b*8), (x + 1, y + 1)) 
+            self.img.put("#%02x%02x%02x" % (r*4,g*8,b*8), (x + 2, y + 1)) 
+
+            self.img.put("#%02x%02x%02x" % (r*4,g*8,b*8), (x, y + 2)) 
+            self.img.put("#%02x%02x%02x" % (r*4,g*8,b*8), (x + 1, y + 2)) 
+            self.img.put("#%02x%02x%02x" % (r*4,g*8,b*8), (x + 2, y + 2)) 
+
+
+
+
 
     def initUI(self):
      
@@ -171,7 +193,9 @@ class MemoryWatcher():
 
     def action(self, data):
         print("MemoryWatcher GUI call with data, ", data, "!")
-        self.listbox.insert(self.index, data)
+        mem = data[0]
+        val = data[1]
+        self.listbox.insert(hex(self.index), (hex(mem) + hex(val)))
         self.index += 1
 
     def initUI(self):
