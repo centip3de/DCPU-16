@@ -16,7 +16,6 @@ class Main():
         self.parent.title("Main")
         self.frame      = Frame(parent)
         self.frame.config(pady = 10)
-        self.t          = None
         self.running    = True
 
         # Set up the label at the top
@@ -81,8 +80,8 @@ class Main():
 
     def run_program(self):
         self.running = True
-        self.t = threading.Thread(target=self.run)
-        self.t.start()
+        t = threading.Thread(target=self.run)
+        t.start()
 
     def update_text(self, obj, text):
 
