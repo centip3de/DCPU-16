@@ -10,12 +10,14 @@ import time
 class Main():
     def __init__(self, parent, CPU_object):
 
-        # Set up the basic variables and the fram
+        # Set up the basic variables and the frame
         self.cpu        = CPU_object
         self.parent     = parent
         self.parent.title("Main")
         self.frame      = Frame(parent)
         self.frame.config(pady = 10)
+        self.t          = None
+        self.running    = True
 
         # Set up the label at the top
         self.label      = Label(self.frame, text = "Registers: ")
@@ -45,12 +47,14 @@ class Main():
         self.watcher_button = Button(self.frame, text = "Open watcher", width = 25, command = self.open_watcher)
         self.run_button     = Button(self.frame, text = "Run program", width = 25, command = self.run_program)
         self.step_button    = Button(self.frame, text = "Step program", width = 25, command = self.step_program)
+        self.stop_button    = Button(self.frame, text = "Stop program", width = 25, command = self.stop_program)
 
         # Pack the buttons
         self.monitor_button.grid(row = 12, columnspan = 2)
         self.watcher_button.grid(row = 13, columnspan = 2)
         self.run_button.grid(row = 14, columnspan = 2)
         self.step_button.grid(row = 15, columnspan = 2)
+        self.stop_button.grid(row = 16, columnspan = 2)
 
         # Pack the frame
         self.frame.pack()
@@ -60,7 +64,7 @@ class Main():
         # Step through the program and update the registers
         self.cpu.step()
         self.update_regs()
-        time.sleep(0.01)
+        time.sleep(0.1)
 
         # Disable the buttons for step/run 
         if len(self.cpu.text) == self.cpu.PC:
@@ -69,13 +73,16 @@ class Main():
 
     def run(self):
 
-        while(len(self.cpu.text) != self.cpu.PC):
+        while(len(self.cpu.text) != self.cpu.PC and self.running):
             self.step_program()
 
-    def run_program(self):
+    def stop_program(self):
+        self.running = False
 
-        t = threading.Thread(target=self.run)
-        t.start()
+    def run_program(self):
+        self.running = True
+        self.t = threading.Thread(target=self.run)
+        self.t.start()
 
     def update_text(self, obj, text):
 
@@ -135,7 +142,7 @@ class Monitor():
 
             print("[VIDEO]: Pixel,", hex(pixel), "set to,", hex(data[1]), "(#%02x%02x%02x)" % (r,g,b))
 
-            #Calculate the x and y
+            #Calculate the x and y. Offset the y by 3, because the border takes up 3 pixels.
             x = (pixel%126)*3
             y = ((pixel//126) + 3)*3
             print("********************Y = ", y)
@@ -158,10 +165,6 @@ class Monitor():
             self.img.put("#%02x%02x%02x" % (r*4,g*8,b*8), (x, y + 2)) 
             self.img.put("#%02x%02x%02x" % (r*4,g*8,b*8), (x + 1, y + 2)) 
             self.img.put("#%02x%02x%02x" % (r*4,g*8,b*8), (x + 2, y + 2)) 
-
-
-
-
 
     def initUI(self):
      
@@ -218,7 +221,7 @@ def main(program):
     # Create basic TK loop
     root = Tk()
     ex = Main(root, cpu)
-    root.geometry("300x460")
+    root.geometry("300x480")
     root.mainloop()  
 
 
