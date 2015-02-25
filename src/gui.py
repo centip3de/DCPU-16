@@ -182,7 +182,7 @@ class MemoryWatcher():
 
         # Window stuff
         self.parent = parent
-        self.parent.geometry("400x300")
+        self.parent.geometry("200x300")
         self.frame = Frame(parent)
 
         # List box stuff
@@ -197,7 +197,7 @@ class MemoryWatcher():
         print("MemoryWatcher GUI call with data, ", data, "!")
         mem = data[0]
         val = data[1]
-        self.listbox.insert(hex(self.index), (hex(mem) + hex(val)))
+        self.listbox.insert(hex(self.index), ("[" + hex(mem) + "]: " + hex(val)))
         self.index += 1
 
     def initUI(self):
