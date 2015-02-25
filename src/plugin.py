@@ -18,6 +18,10 @@ class PluginManager():
         if(event == 1):
             for listener in PluginManager.mem_list:
                 listener.notify(data)
+
+    def unregister(listener):
+        PluginManager.listeners.remove(listener)
+        print("[PLUGIN] Removed listner:", listener)
             
 class MemoryListener():
     def __init__(self, action):
@@ -29,3 +33,6 @@ class MemoryListener():
 
     def notify(self, data):
         self.action(data)
+
+    def unregister(self):
+        PluginManager.unregister(self)

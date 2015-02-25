@@ -186,12 +186,14 @@ class Monitor():
         self.canvas.create_image((self.width/2, self.height/2), image=self.img, state="normal")
 
         #Test drawing characters. 
+        """
         self.draw_text(0, 0, "H")
         self.draw_text(1, 0, "e")
         self.draw_text(2, 0, "l")
         self.draw_text(3, 0, "l")
         self.draw_text(4, 0, "o")
         self.draw_text(5, 0, "!")
+        """
 
 class MemoryWatcher():
     
@@ -217,6 +219,10 @@ class MemoryWatcher():
         self.listbox.insert(hex(self.index), ("[" + hex(mem) + "]: " + hex(val)))
         self.index += 1
 
+    def handle_close(self):
+        self.memory_listener.unregister()
+        self.parent.quit()
+
     def initUI(self):
 
         # Deal with the UI
@@ -225,6 +231,9 @@ class MemoryWatcher():
 
         self.listbox.insert(1, "Memory changed: ") 
         self.listbox.pack(fill=BOTH, expand=1)
+
+        # Handle the closing event (unregister the event listener)
+        self.parent.protocol("WM_DELETE_WINDOW", self.handle_close)
 
 def main(program):
     
