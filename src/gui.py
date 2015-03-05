@@ -1,7 +1,6 @@
 from tkinter import Tk, Canvas, Frame, BOTH, Button, Toplevel, Entry, Label, END, DISABLED, NORMAL, Listbox, PhotoImage
 from opcodes import *
 from plugin import *
-from math import sin
 import emulator
 import sys
 import threading
@@ -17,6 +16,7 @@ class Main():
         self.frame      = Frame(parent)
         self.frame.config(pady = 10)
         self.running    = True
+        self.reg_list   = RegisterListener(self.update_regs)
 
         # Set up the label at the top
         self.label      = Label(self.frame, text = "Registers: ")
@@ -58,11 +58,13 @@ class Main():
         # Pack the frame
         self.frame.pack()
 
+        # Handle the closing event (unregister the event listener)
+        self.parent.protocol("WM_DELETE_WINDOW", self.handle_close)
+
     def step_program(self):
 
         # Step through the program and update the registers
         self.cpu.step()
-        self.update_regs()
         time.sleep(0.1)
 
         # Disable the buttons for step/run 
@@ -82,6 +84,7 @@ class Main():
         self.running = True
         t = threading.Thread(target=self.run)
         t.start()
+       # self.run()
 
     def update_text(self, obj, text):
 
@@ -89,7 +92,7 @@ class Main():
         obj.delete(0, END)
         obj.insert(0, text)
 
-    def update_regs(self):
+    def update_regs(self, data):
         
         # Update the general registers
         for i, reg in enumerate(self.cpu.regs):
@@ -100,12 +103,15 @@ class Main():
         self.update_text(self.register_text[9], hex(self.cpu.PC))
         self.update_text(self.register_text[10], hex(self.cpu.O))
 
+    def handle_close(self):
+        self.reg_list.unregister()
+        self.parent.quit()
+
     def open_watcher(self):
         self.watcher_window = Toplevel(self.parent)
         self.app = MemoryWatcher(self.watcher_window) 
 
     def open_monitor(self):
-
         # Open the monitor
         self.monitor_window = Toplevel(self.parent)
         self.app = Monitor(self.monitor_window)
@@ -119,12 +125,15 @@ class Monitor():
         
         self.parent.geometry("378x288")
         self.frame              = Frame(parent)
-        self.memory_listener    = MemoryListener(self.action)
+        self.memory_listener    = MemoryListener(self.mem_action)
+        self.print_listener     = PrintListener(self.print_action)
         self.width              = 378
         self.height             = 288
         self.img                = PhotoImage(width=self.width, height=self.height)
         self.canvas             = None
         self.number_of_chars    = 0
+        self.x                  = 0
+        self.y                  = 0
         self.initUI()
 
     def draw_text(self, x, y, char):
@@ -132,7 +141,16 @@ class Monitor():
         self.canvas.create_text(x + 10 + (7 * self.number_of_chars), y + 10, text=char, fill="white") 
         self.number_of_chars += 1
 
-    def action(self, data):
+    def handle_close(self):
+        self.memory_listener.unregister()
+        self.parent.destroy()
+
+    def print_action(self, data):
+        self.draw_text(self.x, self.y, data)
+        self.x = (self.x + 1)%126
+        self.y = (self.y + 1)//126
+
+    def mem_action(self, data):
         address = data[0]
 
         # Video mem starts at 0x8000, and since the monitor is 120x90, and (120*90) = 0x2A30, so 0x8000 + 0x2A30 = 0xAA30
@@ -150,7 +168,7 @@ class Monitor():
 
             #Calculate the x and y. Offset the y by 3, because the border takes up 3 pixels.
             x = (pixel%126)*3
-            y = ((pixel//126) + 3)*3
+            y = ((pixel//126)*3)+3
             print("********************Y = ", y)
 
             #Update the image with a static pink
@@ -185,15 +203,8 @@ class Monitor():
         # Need to create an image so we can place individual pixels 
         self.canvas.create_image((self.width/2, self.height/2), image=self.img, state="normal")
 
-        #Test drawing characters. 
-        """
-        self.draw_text(0, 0, "H")
-        self.draw_text(1, 0, "e")
-        self.draw_text(2, 0, "l")
-        self.draw_text(3, 0, "l")
-        self.draw_text(4, 0, "o")
-        self.draw_text(5, 0, "!")
-        """
+         # Handle the closing event (unregister the event listener)
+        self.parent.protocol("WM_DELETE_WINDOW", self.handle_close)
 
 class MemoryWatcher():
     
@@ -213,7 +224,6 @@ class MemoryWatcher():
         self.initUI()
 
     def action(self, data):
-        print("MemoryWatcher GUI call with data, ", data, "!")
         mem = data[0]
         val = data[1]
         self.listbox.insert(hex(self.index), ("[" + hex(mem) + "]: " + hex(val)))
@@ -221,7 +231,7 @@ class MemoryWatcher():
 
     def handle_close(self):
         self.memory_listener.unregister()
-        self.parent.quit()
+        self.parent.destroy()
 
     def initUI(self):
 
