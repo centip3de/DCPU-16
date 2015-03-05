@@ -84,15 +84,32 @@ class CPU():
         return [op, dest, src]
 
     def setmem(self, dest, value):
-        print("[MEM]: Setting " + hex(dest) + " to " + hex(value))
-
         self.mem[dest] = value
         PluginManager.notify(1, (dest, value))
+
+    def setreg(self, dest, value):
+        if dest == 0x1C:
+            self.PC = value 
+
+        elif dest == 0x1B:
+            self.SP = value
+
+        else:
+            self.regs[dest] = value
+
+        PluginManager.notify(2, (dest, value))
+
 
     def JSR(self, dest):
         self.SP -= 1
         self.mem[self.SP] = self.PC
         self.PC = dest
+
+    def PNT(self, dest):
+        while(self.mem[dest] != 0x0):
+            PluginManager.notify(3, chr(self.mem[dest]))
+            dest+=1
+
 
     def handle_math(self, dest, src, func, cycle, overflow):
 
@@ -110,13 +127,13 @@ class CPU():
 
         if self.is_reg(dest):
             if dest == 0x1C:
-                self.PC = func(self.PC, src)
+                self.setreg(dest, func(self.PC, src))
 
             elif dest == 0x1B:
-                self.SP = func(self.SP, src)
+                self.setreg(dest, func(self.SP, src))
 
             else:
-                self.regs[dest] = func(self.regs[dest], src)
+                self.setreg(dest, func(self.regs[dest], src))
 
         else:
             self.setmem(dest, func(self.mem[dest], src))
@@ -179,21 +196,21 @@ class CPU():
         if self.is_reg(dest):
             if dest == 0x1C:
                 if src == 0:
-                    self.PC = 0
+                    self.setreg(dest, 0)
                 else:
-                    self.PC = func(self.PC, src)
+                    self.setreg(dest, func(self.PC, src))
 
             elif dest == 0x1B:
                 if src == 0:
-                    self.SP = 0
+                    self.setreg(dest, 0)
                 else:
-                    self.SP = func(self.SP, src)
+                    self.setreg(dest, func(self.SP, src))
 
             else:
                 if src == 0:
-                    self.regs[dest] = 0
+                    self.setreg(dest, 0)
                 else:
-                    self.regs[dest] = func(self.regs[dest], src)
+                    self.setreg(dest, func(self.regs[dest], src))
 
         else:
             if src == 0:
@@ -306,7 +323,7 @@ class CPU():
 
         # Handle basic opcodes
         if op in REV_BASIC:
-
+            
             # Handle opcodes
             if REV_BASIC[op] == "SET":
                 self.handle_math(dest, src, (lambda x, y: y), 1, None)
@@ -355,6 +372,9 @@ class CPU():
 
             if REV_NON_BASIC[dest] == "JSR":
                 self.JSR(src)
+
+            elif REV_NON_BASIC[dest] == "PNT":
+                self.PNT(src)
 
     def load(self, program):
 
