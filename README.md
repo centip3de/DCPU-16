@@ -13,17 +13,21 @@ Dependencies:
 Running:
 --------
 Given a DCPU-16 assembly file, you can run it with;
+
 ```$python3 main.py <my_file>.dasm```
 
 If you'd like to run it with the GUI, use the GUI flag (-g);
+
 ```$python3 main.py -g <my_file>.dasm```
 
 And lastly, if you already have an assembled DCPU-16 program, use the assembled flag (-a);
+
 ```$python3 main.py -a <my_file>.dasm```
 
 Tests:
 ------
-If you'd like to run regression tests, put the DCPU-16 assembly file in the src/tests/ directory, along with the expected output of the test in filename.out, then run the following command
+If you'd like to run regression tests, put the DCPU-16 assembly file in the src/tests/ directory, along with the expected output of the test in filename.out, then run the following command;
+
 ```$python3 test.py ```
 
 The script will automatically assemble and run all tests in the src/tests/ directory, testing to see if their output matches the expected output.
