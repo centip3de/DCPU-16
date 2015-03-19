@@ -34,6 +34,8 @@ def main():
 
                     # Open a subprocess and run a new python instance on the emulator, capturing it's output
                     output = subprocess.check_output(["python3", "emulator.py", (filepath + ".obj")], universal_newlines = True)
+                    print(output)
+                    print(text)
 
                     # If the output matches the expected output, it passed. 
                     if output == text:
